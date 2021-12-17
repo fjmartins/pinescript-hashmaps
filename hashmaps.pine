@@ -1,0 +1,36 @@
+// This source code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
+// I haven't properly tested it for collisions and starting the array with 100000 elements might not be good memory-wise.
+// But it's a start
+// © fjmartins
+
+//@version=5
+indicator("Hashmaps")
+
+hashmap = array.new_string(100000, na)
+char_at(i) =>
+    str.pos('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789:.', i)    
+
+hashcode_to_index(hashcode) =>
+    hashcode % array.size(hashmap)
+
+hashcode(key) =>
+    hash = 7
+    length = str.length(key)
+    for i = 0 to length - 1 by 1
+        hash := hash * 31 + char_at(str.substring(key, i, i+1))
+    
+    hash
+
+put(key, value) =>
+    array.set(hashmap, hashcode_to_index(hashcode(key)), value)
+
+get(key) =>
+    array.get(hashmap, hashcode_to_index(hashcode(key)))
+
+if barstate.islast
+    put('key', 'my value')
+    put('key1', 'my value 1')
+    
+    label.new(x=bar_index, y=high, textcolor=color.yellow, text=get('key'), size=size.normal, style=label.style_none)
+    
+plot(close)
