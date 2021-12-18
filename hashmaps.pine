@@ -1,17 +1,14 @@
 // This source code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
-// I haven't properly tested it for collisions and starting the array with 100000 elements might not be good memory-wise.
-// But it's a start
-// © fjmartins
+// © marspumpkin(TradingView), @definitelyfabio(Twitter), @fjmartins(GitHub)
 
 //@version=5
-indicator("Hashmaps")
+library("hashmap")
 
-hashmap = array.new_string(100000, na)
 char_at(i) =>
-    str.pos('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789:.', i)    
+    str.pos(' !#$%&\()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~;', i)    
 
-hashcode_to_index(hashcode) =>
-    hashcode % array.size(hashmap)
+hashcode_to_index(arr, hashcode) =>
+    hashcode % array.size(arr)
 
 hashcode(key) =>
     hash = 7
@@ -21,16 +18,36 @@ hashcode(key) =>
     
     hash
 
-put(key, value) =>
-    array.set(hashmap, hashcode_to_index(hashcode(key)), value)
+// string array
+export put(string[]arr, string key, string value) =>
+    if array.size(arr) > 0
+        array.set(arr, hashcode_to_index(arr, hashcode(key)), value)
 
-get(key) =>
-    array.get(hashmap, hashcode_to_index(hashcode(key)))
+export get(string[]arr, string key) =>
+    array.get(arr, hashcode_to_index(arr, hashcode(key)))
+
+// int array
+export put(int[]arr, string key, int value) =>
+    if array.size(arr) > 0
+        array.set(arr, hashcode_to_index(arr, hashcode(key)), value)
+
+export get(int[]arr, string key) =>
+    array.get(arr, hashcode_to_index(arr, hashcode(key)))
+
+// float array
+export put(float[]arr, string key, float value) =>
+    if array.size(arr) > 0
+        array.set(arr, hashcode_to_index(arr, hashcode(key)), value)
+
+export get(float[]arr, string key) =>
+    array.get(arr, hashcode_to_index(arr, hashcode(key)))
 
 if barstate.islast
-    put('key', 'my value')
-    put('key1', 'my value 1')
+    hashmap = array.new_string(10000, na)
     
-    label.new(x=bar_index, y=high, textcolor=color.yellow, text=get('key'), size=size.normal, style=label.style_none)
+    put(hashmap, 'key', 'my value')
+    put(hashmap, 'key1', 'my value 1')
+    
+    label.new(x=bar_index, y=high, textcolor=color.yellow, text=get(hashmap, 'key'), size=size.normal, style=label.style_none)
     
 plot(close)
