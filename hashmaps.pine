@@ -1,8 +1,11 @@
 // This source code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
-// © marspumpkin(TradingView), @definitelyfabio(Twitter), @fjmartins(GitHub)
+// © marspumpkin
+
+import marspumpkin/pson/4
 
 //@version=5
-library("hashmap")
+// @description: Simple hashmap implementation for pinescript. It gets your string array and transforms it into a hashmap. Before using it you need to initialize your array with the size you need for your specific case. 
+library("hashmaps")
 
 char_at(i) =>
     str.pos(' !#$%&\()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~;', i)    
@@ -18,36 +21,33 @@ hashcode(key) =>
     
     hash
 
-// string array
 export put(string[]arr, string key, string value) =>
     if array.size(arr) > 0
-        array.set(arr, hashcode_to_index(arr, hashcode(key)), value)
+        index = hashcode_to_index(arr, hashcode(key))
+        pson_string = array.get(arr, index)
+        if pson_string == na
+            pson_string := '{}'
+        
+        // detecting collisions
+        if pson.exists(pson_string, key)
+            pson_string := pson.set(pson_string, key, value)
+        else
+            pson_string := pson.add(pson_string, key, value)
+
+        array.set(arr, index, pson_string)
 
 export get(string[]arr, string key) =>
-    array.get(arr, hashcode_to_index(arr, hashcode(key)))
-
-// int array
-export put(int[]arr, string key, int value) =>
     if array.size(arr) > 0
-        array.set(arr, hashcode_to_index(arr, hashcode(key)), value)
-
-export get(int[]arr, string key) =>
-    array.get(arr, hashcode_to_index(arr, hashcode(key)))
-
-// float array
-export put(float[]arr, string key, float value) =>
-    if array.size(arr) > 0
-        array.set(arr, hashcode_to_index(arr, hashcode(key)), value)
-
-export get(float[]arr, string key) =>
-    array.get(arr, hashcode_to_index(arr, hashcode(key)))
-
+        pson.get(array.get(arr, hashcode_to_index(arr, hashcode(key))), key)
+    
 if barstate.islast
     hashmap = array.new_string(10000, na)
+    put(hashmap, 'key', '{a={key:value}:c=d}')
+    put(hashmap, 'key1', '{a={key:value}:c=d}')
+    put(hashmap, 'key2', '{e=f:g=h}')
+    pson_string = get(hashmap, 'key')
+    output = pson.get(pson_string, 'a')
     
-    put(hashmap, 'key', 'my value')
-    put(hashmap, 'key1', 'my value 1')
-    
-    label.new(x=bar_index, y=high, textcolor=color.yellow, text=get(hashmap, 'key'), size=size.normal, style=label.style_none)
+    label.new(x=bar_index, y=high, textcolor=color.yellow, text=output, size=size.normal, style=label.style_none)
     
 plot(close)
